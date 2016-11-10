@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="boardDao">
+	
+	<resultMap id="boardMap" type="BoardVO">
+		<id column="BRD_ID" property="boardId"/>
+		<result column="SBJ" property="subject"/>
+		<result column="CONT" property="content"/>
+		<result column="USR_ID" property="userId"/>
+		<result column="CRT_DT" property="createdDate"/>
+		<result column="HIT" property="hit"/>
+		<result column="RCMD" property="recommend"/>
+		<result column="DP_FL_NM" property="displayFileName"/>
+		<result column="RL_FL_NM" property="realFileName"/>
+		<association property="user" javaType="UserVO">
+			<id column="U_USR_ID" property="userId" />
+			<result column="USR_NICK_NAME" property="userNickName"/>
+			<result column="U_CRT_DT" property="createdDate"/>
+			<result column="PNT" property="point"/>
+		</association>
+	</resultMap>
+	
+	<select id="getAllBoards" resultMap="boardMap" parameterType="BoardSearchVO">
+		SELECT	*
+		FROM	(
+					SELECT	A.*
+							, ROWNUM RNUM 
+					FROM	(
+								SELECT 	/* [boardDao.xml] [getAllBoards] */
+										B.BRD_ID
+										, B.SBJ
+										, B.USR_ID
+										, B.CRT_DT
+										, B.HIT
+										, B.RCMD
+										, U.USR_ID U_USR_ID
+										, U.USR_NICK_NAME
+										, U.CRT_DT U_CRT_DT
+										, U.PNT
+										, B.DP_FL_NM 
+						   				, B.RL_FL_NM
+								FROM 	BRD B
+										, USR U
+								WHERE	B.USR_ID = U.USR_ID
+								<if test="searchType == 1">
+								AND		B.SBJ LIKE '%' || #{searchKeyword} || '%' 
+								</if>
+								<if test="searchType == 2">
+								AND		U.USR_NICK_NAME LIKE '%' || #{searchKeyword} || '%'
+								</if>
+								ORDER	BY BRD_ID DESC
+							) A
+					WHERE	ROWNUM <![CDATA[<=]]> #{endNumber} 
+				)
+		WHERE	RNUM >= #{startNumber}
+	</select>
+	
+	<delete id="deleteBoard" parameterType="string">
+		DELETE /* [boardDao.xml]  [deleteBoard] */
+		FROM 	BRD
+		WHERE 	BRD_ID = #{boardId}
+	</delete>
+	
+	<insert id="addBoard" parameterType="BoardVO">
+		INSERT INTO /* [boardDao.xml] [addBoard] */	
+					BRD 	(
+   									BRD_ID
+   									, SBJ
+   									, CONT
+   									, USR_ID
+   									, CRT_DT
+   									, HIT
+   									, RCMD
+   									, DP_FL_NM 
+   									, RL_FL_NM
+   								) 
+		VALUES 					( 
+									'BRD-' || TO_CHAR(SYSDATE, 'yyyyMMdd') || '-' || LPAD(BRD_ID_SEQ.NEXTVAL, 6, '0')
+									, #{subject}
+									, #{content}
+									, #{userId}
+									, SYSDATE
+									, 0
+									, 0
+									, #{displayFileName}
+									, #{realFileName}
+								)
+	</insert>
+	
+	<select id="getBoardBy" resultMap="boardMap" parameterType="string">
+		SELECT /* [boardDao.xml][getBoardBy] */
+				B.BRD_ID
+				, B.SBJ
+				, B.CONT
+				, B.USR_ID
+				, B.CRT_DT
+				, B.HIT
+				, B.RCMD
+				, B.DP_FL_NM
+				, B.RL_FL_NM
+				, U.USR_ID U_USR_ID
+				, U.USR_NICK_NAME
+				, U.CRT_DT U_CRT_DT
+				, U.PNT
+		FROM 	BRD B
+				, USR U
+		WHERE   U.USR_ID = B.USR_ID
+		AND		B.BRD_ID = #{boardId}
+	
+	</select>
+	<update id="updateHitCount" parameterType="string">
+		UPDATE	BRD
+		SET		HIT = HIT + 1
+		WHERE	BRD_ID = #{boardId}
+	</update>
+	
+	
+	<select id="getBoardCount" resultType="_int" parameterType="BoardSearchVO">
+		SELECT	COUNT(1)
+		FROM	BRD	B
+		<if test="searchType == 1">
+		WHERE	B.SBJ LIKE '%' || #{searchKeyword} || '%' 
+		</if>
+		<if test="searchType == 2">
+				, USR U
+		WHERE	B.USR_ID = U.USR_ID
+		AND		U.USR_NICK_NAME LIKE '%' || #{searchKeyword} || '%'
+		</if>
+	</select>
+</mapper>
+
+
+
+
+
+
+
+
+

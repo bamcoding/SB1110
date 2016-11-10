@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="replyDao">
+	
+	<resultMap type="ReplyVO" id="replyVOMap">
+		<id column="RPLY_ID" property="replyId"/>
+		<result column="BRD_ID" property="boardId"/> 
+		<result column="USR_ID" property="userId"/> 
+		<result column="PRNT_RPLY_ID" property="parentReplyId"/> 
+		<result column="RPLY" property="reply"/> 
+		<result column="CRT_DT" property="createdDate"/> 
+		<result column="LEVEL" property="level"/> 
+		<association property="board" javaType="BoardVO">
+			<id column="B_BRD_ID" property="boardId"/>
+			<result column="SBJ" property="subject"/>
+			<result column="CONT" property="content"/>
+			<result column="B_USR_ID" property="userId"/>
+			<result column="B_CRT_DT" property="createdDate"/>
+			<result column="HIT" property="hit"/>
+			<result column="RCMD" property="recommend"/>
+			<result column="DP_FL_NM" property="displayFileName"/>
+			<result column="RL_FL_NM" property="realFileName"/>
+		</association>
+		<association property="user" javaType="UserVO">
+			<id column="U_USR_ID" property="userId" />
+			<result column="USR_NICK_NAME" property="userNickName"/>
+			<result column="U_CRT_DT" property="createdDate"/>
+			<result column="PNT" property="point"/>
+		</association>
+		<association property="parent" javaType="ReplyVO" >
+			<id column="P_RPLY_ID" property="replyId"/>
+			<result column="P_BRD_ID" property="boardId"/> 
+			<result column="P_USR_ID" property="userId"/> 
+			<result column="P_PRNT_RPLY_ID" property="parentReplyId"/> 
+			<result column="P_RPLY" property="reply"/> 
+			<result column="P_CRT_DT" property="createdDate"/> 
+			<result column="P_LEVEL" property="level"/> 
+		</association>   				
+	</resultMap>
+	
+	<insert id="addReply" parameterType="ReplyVO">
+		INSERT INTO 	RPLY 	/* [replyDao.xml] [addReply] */
+								(
+   									RPLY_ID
+   									, BRD_ID
+   									, USR_ID
+   									, PRNT_RPLY_ID
+   									, RPLY
+   									, CRT_DT
+   								) 
+		VALUES 					( 
+									'RP-' || TO_CHAR(SYSDATE, 'yyyyMMdd') || '-' || LPAD(RPLY_ID_SEQ.NEXTVAL, 6, '0')
+									, #{boardId}
+									, #{userId}
+									, #{parentReplyId}
+									, #{reply}
+									, SYSDATE
+								)
+	
+	</insert>
+	<select id="getAllReply" resultMap="replyVOMap" parameterType="string">
+		SELECT	LEVEL
+				, R.RPLY_ID 
+   				, R.BRD_ID
+   				, R.USR_ID
+   				, R.PRNT_RPLY_ID
+   				, R.RPLY
+   				, R.CRT_DT
+   				, U.USR_ID U_USR_ID
+				, U.USR_NICK_NAME
+				, U.CRT_DT U_CRT_DT
+				, U.PNT
+				, B.BRD_ID B_BRD_ID
+				, B.SBJ
+				, B.USR_ID B_USR_ID
+				, B.CRT_DT B_CRT_DT
+				, B.HIT
+				, B.RCMD
+				, P.RPLY_ID P_RPLY_ID
+   				, P.BRD_ID P_BRD_ID
+   				, P.USR_ID P_USR_ID
+   				, P.PRNT_RPLY_ID P_PRNT_RPLY_ID
+   				, P.RPLY P_RPLY
+   				, P.CRT_DT P_CRT_DT
+		FROM	RPLY R
+				, RPLY P
+				, USR U
+				, BRD B
+		WHERE	R.USR_ID = U.USR_ID
+		AND		R.BRD_ID = B.BRD_ID
+		AND		R.BRD_ID = #{boardId}
+		AND     R.PRNT_RPLY_ID = P.RPLY_ID(+)
+		CONNECT	BY PRIOR R.RPLY_ID = R.PRNT_RPLY_ID
+		START	WITH R.PRNT_RPLY_ID = '0'
+	</select>
+</mapper>
+
+
+
+
+
+
+
+
+

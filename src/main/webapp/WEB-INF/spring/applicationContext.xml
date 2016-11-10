@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd">
+
+	<!-- HandlerMapping & HandlerAdapter 생성 -->
+	<mvc:annotation-driven />
+	
+	<!-- Interceptor 등록 -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<mvc:exclude-mapping path="/login"/>
+			<mvc:exclude-mapping path="/doLogin"/>
+			<mvc:exclude-mapping path="/signUp"/>
+			<mvc:exclude-mapping path="/doSignUp"/>
+			<mvc:exclude-mapping path="/js/**"/>
+			<mvc:exclude-mapping path="/img/**"/>
+			<mvc:exclude-mapping path="/css/**"/>
+			<bean id="loginIntercepter" class="com.ktds.common.intercepter.LogInIntercepter"/>
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<mvc:exclude-mapping path="/login"/>
+			<mvc:exclude-mapping path="/doLogin"/>
+			<mvc:exclude-mapping path="/signUp"/>
+			<mvc:exclude-mapping path="/doSignUp"/>
+			<mvc:exclude-mapping path="/js/**"/>
+			<mvc:exclude-mapping path="/img/**"/>
+			<mvc:exclude-mapping path="/css/**"/>
+			<bean id="pointIntercepter" class="com.ktds.common.intercepter.PointIntercepter">
+				<property name="userDao" ref="userDao"/>
+			</bean>
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+	<!-- Command Validator -->
+	<bean 	id="validator"
+			class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean" />
+	
+	<!-- Static Resources 설정 -->
+	<!-- Location : /WEB-INF 이하의 물리적 경로 -->
+	<!-- Mapping : URL Pattern -->
+	<!-- mapping="/js/**" /js/jquery/jquery-3.1.11.js -->
+	<mvc:resources 	location="/WEB-INF/resources/js/" 
+					mapping="/js/**" />
+	<mvc:resources 	location="/WEB-INF/resources/css/" 
+					mapping="/css/**" />
+	<mvc:resources 	location="/WEB-INF/resources/img/" 
+					mapping="/img/**" />
+					
+	<!-- ViewResolver 생성 -->
+	<bean   id="viewResolver"
+			class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/view/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+	
+	
+	
+	<!-- FileUpload 설정 -->
+	<bean	id="multipartResolver"
+			class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="104857600" /><!-- 100MB -->
+		<property name="defaultEncoding" value="UTF-8" />	
+	</bean>
+	
+	<!-- Exception Handler -->
+	
+	<!-- Controller 등록 -->
+	<bean 	id="userController"
+			class="com.ktds.user.web.UserController">
+		<property name="userService" ref="userService" />
+	</bean>
+	
+	<bean 	id="boardController"
+			class="com.ktds.board.web.BoardController">
+		<property name="boardService" ref="boardService" />		
+	</bean>
+	
+	<bean	id="operationHistoryController"
+			class="com.ktds.admin.operation.history.web.OperationHistoryController">
+		<property name="operationHistoryService" ref="operationHistoryService"/>			
+	</bean>
+	
+	<bean	id="replyController"
+			class="com.ktds.board.web.ReplyController">
+		<property name="replyService" ref="replyService" />
+	</bean>
+</beans>
+
+
+
+
+
